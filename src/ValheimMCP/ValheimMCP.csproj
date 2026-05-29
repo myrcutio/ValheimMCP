@@ -1,0 +1,52 @@
+<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <TargetFramework>net472</TargetFramework>
+        <LangVersion>9.0</LangVersion>
+        <AssemblyName>ValheimMCP</AssemblyName>
+        <RootNamespace>ValheimMCP</RootNamespace>
+        <Version>0.1.0</Version>
+        <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+        <!-- Suppress modding-common warnings (unassigned fields set by Unity/reflection) -->
+        <NoWarn>$(NoWarn);CS0649;CS0169</NoWarn>
+
+        <!-- Paths — mirror the ValheimVillages project conventions -->
+        <ValheimDir>$(HOME)/.local/share/Steam/steamapps/common/Valheim</ValheimDir>
+        <R2ModmanProfile>valheim-modding</R2ModmanProfile>
+        <BepInExDir>$(HOME)/.config/r2modmanPlus-local/Valheim/profiles/$(R2ModmanProfile)/BepInEx</BepInExDir>
+
+        <!-- Ship into plugins/ (loaded once, NOT hot-reloaded) so the HTTP
+             listener survives F6 reloads of other mods and never fights for its port. -->
+        <OutputPath>$(BepInExDir)/plugins/ValheimMCP/</OutputPath>
+    </PropertyGroup>
+
+    <!-- net472 reference assemblies so `dotnet build` works on Linux without a
+         .NET Framework targeting pack installed. -->
+    <ItemGroup>
+        <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.3">
+            <PrivateAssets>all</PrivateAssets>
+        </PackageReference>
+    </ItemGroup>
+
+    <ItemGroup>
+        <Reference Include="BepInEx">
+            <HintPath>$(BepInExDir)/core/BepInEx.dll</HintPath>
+            <Private>false</Private>
+        </Reference>
+        <Reference Include="0Harmony">
+            <HintPath>$(BepInExDir)/core/0Harmony.dll</HintPath>
+            <Private>false</Private>
+        </Reference>
+        <Reference Include="assembly_valheim">
+            <HintPath>$(ValheimDir)/valheim_Data/Managed/assembly_valheim.dll</HintPath>
+            <Private>false</Private>
+        </Reference>
+        <Reference Include="UnityEngine">
+            <HintPath>$(ValheimDir)/valheim_Data/Managed/UnityEngine.dll</HintPath>
+            <Private>false</Private>
+        </Reference>
+        <Reference Include="UnityEngine.CoreModule">
+            <HintPath>$(ValheimDir)/valheim_Data/Managed/UnityEngine.CoreModule.dll</HintPath>
+            <Private>false</Private>
+        </Reference>
+    </ItemGroup>
+</Project>
