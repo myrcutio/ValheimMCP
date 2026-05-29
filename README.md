@@ -22,9 +22,26 @@ typing into the in-game console or round-tripping through dump files.
 
 | Method | Path        | Body / Query              | Returns |
 |--------|-------------|---------------------------|---------|
+| POST   | `/mcp`      | JSON-RPC 2.0 (MCP)        | MCP response (`application/json`) |
 | GET    | `/health`   | —                         | `{ok, inGame}` |
 | GET    | `/commands` | —                         | `{ok, commands:[{name,description}]}` |
 | POST   | `/command`  | raw command line, or `?text=` | `{ok, ran, output:[...], error?}` |
+
+The plain `/health`, `/commands`, `/command` routes are for `curl`/scripting.
+`/mcp` speaks the protocol Claude Code consumes.
+
+## MCP (native, no bridge)
+
+The plugin implements the MCP Streamable-HTTP transport (JSON-RPC 2.0) directly,
+with no external dependencies — a hand-rolled JSON parser/writer and stateless
+`application/json` responses (no SSE). It exposes three tools: `run_command`,
+`list_commands`, `health`.
+
+Register it with Claude Code (game can be launched after; the connector reconnects):
+
+```sh
+claude mcp add --transport http valheim http://127.0.0.1:8731/mcp
+```
 
 ### Examples
 
@@ -56,9 +73,10 @@ Output lands directly in `BepInEx/plugins/ValheimMCP/`.
 
 ## Status / roadmap
 
-- **v1 (here):** plain HTTP, captures synchronous console output. Drive it with `curl`.
-- **Later:** front it with MCP so Claude Code connects to it as first-class tools — either
-  a tiny side process using an MCP SDK (handles protocol correctness, decoupled lifecycle)
-  or an in-process MCP transport. Decision deferred until the endpoint shape is stable.
+- **Done:** plain HTTP routes + native in-process MCP (`/mcp`), capturing synchronous
+  console output. Usable via `curl` or as Claude Code MCP tools.
 - **Known limitation:** output from commands that print asynchronously (coroutines, e.g.
   screenshot capture) is not captured — only what's printed synchronously during the call.
+- **Possible next:** a `GET /file` route (and/or inlining `written: <path>` contents) so
+  commands that dump to `vv_dumps/` return their payload too; typed introspection tools
+  for live state (villagers, region graph) as the navigation refactor needs them.

@@ -68,6 +68,24 @@ namespace ValheimMCP
             var path = ctx.Request.Url.AbsolutePath.TrimEnd('/');
             var method = ctx.Request.HttpMethod;
 
+            // MCP Streamable HTTP transport (JSON-RPC 2.0). Claude Code connects here:
+            //   claude mcp add --transport http valheim http://127.0.0.1:8731/mcp
+            if (path == "/mcp")
+            {
+                if (method == "POST")
+                {
+                    var reply = McpServer.HandleHttp(ReadBody(ctx.Request), _commandTimeoutMs);
+                    if (reply.HasBody) Write(ctx, reply.Status, reply.Body);
+                    else WriteEmpty(ctx, reply.Status);
+                    return;
+                }
+
+                // Stateless server: no SSE stream (GET) and no session to delete (DELETE).
+                if (method == "DELETE") { WriteEmpty(ctx, 200); return; }
+                Write(ctx, 405, Json.Error("MCP endpoint supports POST only (no SSE stream)"));
+                return;
+            }
+
             if (path == "" || path == "/health")
             {
                 MainThreadDispatcher.RunBlocking(() => ConsoleBridge.IsReady, 2000, out var ready, out _);
@@ -106,8 +124,27 @@ namespace ValheimMCP
         {
             var q = req.QueryString["text"];
             if (!string.IsNullOrEmpty(q)) return q.Trim();
+            return ReadBody(req).Trim();
+        }
+
+        private static string ReadBody(HttpListenerRequest req)
+        {
             using (var reader = new StreamReader(req.InputStream, req.ContentEncoding ?? Encoding.UTF8))
-                return reader.ReadToEnd().Trim();
+                return reader.ReadToEnd();
+        }
+
+        private static void WriteEmpty(HttpListenerContext ctx, int status)
+        {
+            try
+            {
+                ctx.Response.StatusCode = status;
+                ctx.Response.ContentLength64 = 0;
+                ctx.Response.OutputStream.Close();
+            }
+            catch (Exception ex)
+            {
+                Plugin.Log?.LogWarning($"[ValheimMCP] failed to write empty response: {ex.Message}");
+            }
         }
 
         private static void Write(HttpListenerContext ctx, int status, string json)
