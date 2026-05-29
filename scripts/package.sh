@@ -13,7 +13,7 @@ cd "$(dirname "$0")/.."
 ROOT="$(pwd)"
 
 CSPROJ="src/ValheimMCP/ValheimMCP.csproj"
-VERSION="$(grep -oP '<Version>\K[^<]+' "${CSPROJ}" | head -1)"
+VERSION="$(grep -oP '<Version>\K[^<]+(?=</Version>)' "${CSPROJ}" | head -1)"
 if [[ -z "${VERSION}" ]]; then
   echo "error: could not read <Version> from ${CSPROJ}" >&2
   exit 1
