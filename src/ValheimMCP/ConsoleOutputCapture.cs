@@ -33,7 +33,7 @@ namespace ValheimMCP
         }
 
         [HarmonyPostfix]
-        [HarmonyPatch(typeof(Terminal), nameof(Terminal.AddString), new[] { typeof(string) })]
+        [HarmonyPatch(typeof(Terminal), nameof(Terminal.AddString), typeof(string))]
         private static void Terminal_AddString_Postfix(string text)
         {
             _sink?.Add(text);

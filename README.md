@@ -26,6 +26,7 @@ typing into the in-game console or round-tripping through dump files.
 | GET    | `/health`   | —                         | `{ok, inGame}` |
 | GET    | `/commands` | —                         | `{ok, commands:[{name,description}]}` |
 | POST   | `/command`  | raw command line, or `?text=` | `{ok, ran, output:[...], error?}` |
+| GET    | `/sse`      | —                         | `501 Not Implemented` (no SSE transport) |
 
 The plain `/health`, `/commands`, `/command` routes are for `curl`/scripting.
 `/mcp` speaks the protocol Claude Code consumes.
@@ -34,8 +35,16 @@ The plain `/health`, `/commands`, `/command` routes are for `curl`/scripting.
 
 The plugin implements the MCP Streamable-HTTP transport (JSON-RPC 2.0) directly,
 with no external dependencies — a hand-rolled JSON parser/writer and stateless
-`application/json` responses (no SSE). It exposes three tools: `run_command`,
-`list_commands`, `health`.
+`application/json` responses (no SSE). Tools:
+
+- `run_command(text)` — run a console command, return captured output.
+- `list_commands()` — all registered console commands.
+- `health()` — is a world loaded.
+- `render_view(x, z, [y, yaw, pitch, dist, size])` — render the location with an
+  **independent off-screen camera** (never touches the player's view) and return
+  the PNG inline. Pair with `vv_path_debug cam=vvmcp_render_cam` (or `vv_tri_debug
+  cam=vvmcp_render_cam`) on the ValheimVillages side to draw path/triangulation
+  overlays into *only* this camera.
 
 Register it with Claude Code (game can be launched after; the connector reconnects):
 
@@ -57,11 +66,27 @@ curl -s -X POST 127.0.0.1:8731/command --data 'vv_probe 100 -50'
 
 ## Config
 
-`BepInEx/config/com.valheimmcp.debugserver.cfg`:
+`BepInEx/config/valheimmcp.yml` (written with defaults on first run; parsed by the
+dependency-free `MiniYaml` reader):
 
-- `Server.Host` (default `127.0.0.1`) — keep on localhost; the endpoint is unauthenticated.
-- `Server.Port` (default `8731`)
-- `Server.CommandTimeoutMs` (default `15000`)
+```yaml
+server:
+  host: 127.0.0.1          # loopback only — endpoint is unauthenticated
+  port: 8731
+  commandTimeoutMs: 15000
+
+render:
+  defaultSize: 768         # render_view size when 'size' is omitted
+  minSize: 256
+  maxSize: 1280
+
+# Access control for run_command (and POST /command). 'deny' always wins; if
+# 'allow' is non-empty, ONLY matching commands run. Match by command name;
+# trailing '*' is a prefix wildcard (e.g. "vv_*").
+commands:
+  allow: []
+  deny: []
+```
 
 ## Build
 

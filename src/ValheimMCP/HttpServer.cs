@@ -18,14 +18,14 @@ namespace ValheimMCP
     ///             (or <c>?text=</c>). Returns {ok, ran, output:[...], error?}</item>
     ///     </list>
     /// </summary>
-    internal sealed class DebugHttpServer
+    internal sealed class HttpServer
     {
-        private readonly HttpListener _listener = new HttpListener();
+        private readonly HttpListener _listener = new();
         private readonly int _commandTimeoutMs;
         private Thread _thread;
         private volatile bool _running;
 
-        public DebugHttpServer(string prefix, int commandTimeoutMs)
+        public HttpServer(string prefix, int commandTimeoutMs)
         {
             _listener.Prefixes.Add(prefix);
             _commandTimeoutMs = commandTimeoutMs;
@@ -68,8 +68,8 @@ namespace ValheimMCP
             var path = ctx.Request.Url.AbsolutePath.TrimEnd('/');
             var method = ctx.Request.HttpMethod;
 
-            // MCP Streamable HTTP transport (JSON-RPC 2.0). Claude Code connects here:
-            //   claude mcp add --transport http valheim http://127.0.0.1:8731/mcp
+            // MCP Streamable HTTP transport (JSON-RPC 2.0)
+            //   example execution: claude mcp add --transport http valheim http://127.0.0.1:8731/mcp
             if (path == "/mcp")
             {
                 if (method == "POST")
@@ -83,6 +83,13 @@ namespace ValheimMCP
                 // Stateless server: no SSE stream (GET) and no session to delete (DELETE).
                 if (method == "DELETE") { WriteEmpty(ctx, 200); return; }
                 Write(ctx, 405, Json.Error("MCP endpoint supports POST only (no SSE stream)"));
+                return;
+            }
+
+            // We don't implement an SSE transport; advertise that explicitly.
+            if (path == "/sse")
+            {
+                Write(ctx, 501, Json.Error("SSE transport not implemented; use POST /mcp (JSON-RPC over HTTP)"));
                 return;
             }
 
@@ -129,8 +136,8 @@ namespace ValheimMCP
 
         private static string ReadBody(HttpListenerRequest req)
         {
-            using (var reader = new StreamReader(req.InputStream, req.ContentEncoding ?? Encoding.UTF8))
-                return reader.ReadToEnd();
+            using var reader = new StreamReader(req.InputStream, req.ContentEncoding ?? Encoding.UTF8);
+            return reader.ReadToEnd();
         }
 
         private static void WriteEmpty(HttpListenerContext ctx, int status)

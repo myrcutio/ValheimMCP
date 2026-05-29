@@ -11,7 +11,7 @@ namespace ValheimMCP
     {
         public bool Ok;
         public string Error;
-        public List<string> Output = new List<string>();
+        public List<string> Output = new();
     }
 
     /// <summary>
@@ -30,7 +30,7 @@ namespace ValheimMCP
                 BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.Public);
 
         /// <summary>True when an in-game console exists to run commands against.</summary>
-        public static bool IsReady => global::Console.instance != null;
+        public static bool IsReady => Console.instance != null;
 
         /// <summary>(name, description) for every registered console command.</summary>
         public static List<KeyValuePair<string, string>> ListCommands()
@@ -55,7 +55,10 @@ namespace ValheimMCP
         /// </summary>
         public static CommandResult Run(string commandLine)
         {
-            var console = global::Console.instance;
+            if (!ModConfig.IsCommandAllowed(commandLine, out var denyReason))
+                return new CommandResult { Ok = false, Error = denyReason };
+
+            var console = Console.instance;
             if (console == null)
                 return new CommandResult { Ok = false, Error = "Console.instance is null (no game loaded yet)" };
 

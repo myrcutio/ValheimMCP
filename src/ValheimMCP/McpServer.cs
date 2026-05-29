@@ -112,6 +112,19 @@ namespace ValheimMCP
             AppendTool(sb, "health",
                 "Check whether Valheim is running with a world loaded (so commands can execute).",
                 "{\"type\":\"object\",\"properties\":{}}");
+            sb.Append(',');
+            AppendTool(sb, "render_view",
+                "Render a PNG of the game world at a point, using an independent off-screen camera " +
+                "(does NOT move the player's view). Returns the image inline.",
+                "{\"type\":\"object\",\"properties\":{" +
+                "\"x\":{\"type\":\"number\",\"description\":\"World X of the look-at point.\"}," +
+                "\"z\":{\"type\":\"number\",\"description\":\"World Z of the look-at point.\"}," +
+                "\"y\":{\"type\":\"number\",\"description\":\"World Y of the look-at point. Defaults to terrain ground height; pass the feature/villager Y for interiors or elevated floors.\"}," +
+                "\"yaw\":{\"type\":\"number\",\"description\":\"Camera compass azimuth in degrees (default 45).\"}," +
+                "\"pitch\":{\"type\":\"number\",\"description\":\"Camera elevation above horizon in degrees: 0=level, 90=top-down (default 35).\"}," +
+                "\"dist\":{\"type\":\"number\",\"description\":\"Camera distance from the look-at point in meters (default 12).\"}," +
+                "\"size\":{\"type\":\"number\",\"description\":\"Square output size in pixels. Defaults to and is clamped by the mod config (render.defaultSize / minSize / maxSize).\"}" +
+                "},\"required\":[\"x\",\"z\"]}");
             sb.Append("]}");
             return sb.ToString();
         }
@@ -163,9 +176,36 @@ namespace ValheimMCP
                                  (result.Output.Count > 0 ? "\n" + string.Join("\n", result.Output) : "");
                     return Result(id, ToolText(joined, !result.Ok));
                 }
+                case "render_view":
+                {
+                    if (args == null ||
+                        !(args.TryGetValue("x", out var xo) && xo is double xd) ||
+                        !(args.TryGetValue("z", out var zo) && zo is double zd))
+                        return Result(id, ToolText("render_view requires numeric 'x' and 'z'", true));
+
+                    var x = (float)xd;
+                    var z = (float)zd;
+                    float? y = args.TryGetValue("y", out var yo) && yo is double yv ? (float)yv : null;
+                    var yaw = (float)Num(args, "yaw", 45);
+                    var pitch = (float)Num(args, "pitch", 35);
+                    var dist = (float)Num(args, "dist", 12);
+                    var size = (int)Num(args, "size", ModConfig.RenderDefaultSize);
+
+                    var ok = MainThreadDispatcher.RunBlocking(
+                        () => CameraRenderer.Render(x, z, y, yaw, pitch, dist, size), 20000, out var rr, out var err);
+                    if (!ok) return Result(id, ToolText("render timed out (game not ticking?)", true));
+                    if (err != null) return Result(id, ToolText("render threw: " + err.Message, true));
+                    if (rr?.Png == null) return Result(id, ToolText("render failed: " + (rr?.Error ?? "unknown"), true));
+                    return Result(id, ToolImage(Convert.ToBase64String(rr.Png), "image/png"));
+                }
                 default:
                     return ErrorResponse(id, -32602, "Unknown tool: " + name);
             }
+        }
+
+        private static double Num(Dictionary<string, object> args, string key, double dflt)
+        {
+            return args != null && args.TryGetValue(key, out var v) && v is double d ? d : dflt;
         }
 
         // ---- JSON-RPC envelope helpers ----
@@ -174,6 +214,12 @@ namespace ValheimMCP
         {
             return "{\"content\":[{\"type\":\"text\",\"text\":" + Json.Str(text) + "}],\"isError\":" +
                    (isError ? "true" : "false") + "}";
+        }
+
+        private static string ToolImage(string base64, string mimeType)
+        {
+            return "{\"content\":[{\"type\":\"image\",\"data\":" + Json.Str(base64) +
+                   ",\"mimeType\":" + Json.Str(mimeType) + "}],\"isError\":false}";
         }
 
         private static string Result(object id, string resultJson)

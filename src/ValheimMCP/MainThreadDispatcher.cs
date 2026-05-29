@@ -11,7 +11,7 @@ namespace ValheimMCP
     /// </summary>
     internal static class MainThreadDispatcher
     {
-        private static readonly ConcurrentQueue<Action> Queue = new ConcurrentQueue<Action>();
+        private static readonly ConcurrentQueue<Action> Queue = new();
 
         /// <summary>
         ///     Run <paramref name="func" /> on the main thread and block the calling

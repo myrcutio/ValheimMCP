@@ -48,5 +48,10 @@
             <HintPath>$(ValheimDir)/valheim_Data/Managed/UnityEngine.CoreModule.dll</HintPath>
             <Private>false</Private>
         </Reference>
+        <!-- EncodeToPNG for render_view -->
+        <Reference Include="UnityEngine.ImageConversionModule">
+            <HintPath>$(ValheimDir)/valheim_Data/Managed/UnityEngine.ImageConversionModule.dll</HintPath>
+            <Private>false</Private>
+        </Reference>
     </ItemGroup>
 </Project>
