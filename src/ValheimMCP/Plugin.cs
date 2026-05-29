@@ -12,12 +12,10 @@ namespace ValheimMCP
     ///     (loaded once, never hot-reloaded) so the listener stays up across F6
     ///     reloads of other mods.
     /// </summary>
-    [BepInPlugin(PluginGUID, PluginName, PluginVersion)]
+    [BepInPlugin(PluginInfo.Guid, PluginInfo.Name, PluginInfo.Version)]
     public class Plugin : BaseUnityPlugin
     {
-        public const string PluginGUID = "com.valheimmcp.server";
-        public const string PluginName = "Valheim MCP Server";
-        public const string PluginVersion = "0.1.0";
+        // Guid/Name/Version live in PluginInfo, generated from ValheimMCP.csproj.
 
         public static ManualLogSource Log { get; private set; }
 
@@ -34,7 +32,7 @@ namespace ValheimMCP
 
             // Harmony postfix on Terminal.AddString tees console output into the
             // capture buffer while a command runs (see ConsoleOutputCapture).
-            _harmony = new Harmony(PluginGUID);
+            _harmony = new Harmony(PluginInfo.Guid);
             _harmony.PatchAll(typeof(ConsoleOutputCapture));
 
             var prefix = $"http://{ModConfig.Host}:{ModConfig.Port}/";
@@ -42,11 +40,11 @@ namespace ValheimMCP
             {
                 _server = new HttpServer(prefix, ModConfig.CommandTimeoutMs);
                 _server.Start();
-                Log.LogInfo($"{PluginName} v{PluginVersion} listening on {prefix}");
+                Log.LogInfo($"{PluginInfo.Name} v{PluginInfo.Version} listening on {prefix}");
             }
             catch (Exception ex)
             {
-                Log.LogError($"{PluginName} failed to start on {prefix}: {ex}");
+                Log.LogError($"{PluginInfo.Name} failed to start on {prefix}: {ex}");
             }
         }
 
@@ -60,7 +58,7 @@ namespace ValheimMCP
         {
             _server?.Stop();
             _harmony?.UnpatchSelf();
-            Log?.LogInfo($"{PluginName} stopped.");
+            Log?.LogInfo($"{PluginInfo.Name} stopped.");
         }
     }
 }

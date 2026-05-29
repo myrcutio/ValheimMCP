@@ -26,7 +26,7 @@ namespace ValheimMCP
     internal static class McpServer
     {
         public const string ServerName = "valheim-mcp";
-        public const string ServerVersion = "0.1.0";
+        public const string ServerVersion = PluginInfo.Version; // generated from ValheimMCP.csproj
         private const string DefaultProtocol = "2024-11-05";
 
         /// <summary>Parse a request body and produce the HTTP reply (status + JSON).</summary>

@@ -1,0 +1,56 @@
+# Publishes a GitHub Release when you push a v* tag (e.g. `git tag v0.1.0 && git push --tags`).
+#
+# NOTE ON THE BUILD: compiling a Valheim mod needs the game's managed assemblies
+# (assembly_valheim.dll, UnityEngine*.dll), which are NOT redistributable and are
+# not present on CI runners. So this workflow does NOT compile. Instead, build +
+# package locally with `scripts/package.sh`, commit the resulting
+# dist/ValheimMCP-<version>.zip on the tagged commit, and this workflow attaches it.
+# Upload the same zip to Thunderstore (https://thunderstore.io/c/valheim/) manually
+# or via the Thunderstore CLI (`tcli`).
+#
+# RUNNER: `runs-on` must be a hosted-runner label (you cannot set `runs-on: alpine`);
+# the steps run inside the lightweight Alpine `container` below. We avoid the usual
+# JavaScript actions (actions/checkout, action-gh-release) because their bundled
+# Node is glibc-linked and won't run on Alpine's musl — so this is shell-only,
+# using git + the gh CLI.
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    container:
+      image: alpine:3.21
+    steps:
+      - name: Install tools
+        run: apk add --no-cache git github-cli
+
+      - name: Checkout tagged commit
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git clone --depth 1 --branch "${GITHUB_REF_NAME}" \
+            "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" repo
+
+      - name: Create GitHub Release
+        working-directory: repo
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          zip="$(ls dist/ValheimMCP-*.zip 2>/dev/null | head -1 || true)"
+          if [ -z "$zip" ]; then
+            echo "No dist/ValheimMCP-*.zip found on the tagged commit." >&2
+            echo "Build it locally with scripts/package.sh and commit it under dist/." >&2
+            exit 1
+          fi
+          gh release create "${GITHUB_REF_NAME}" "$zip" \
+            --title "${GITHUB_REF_NAME}" \
+            --notes "See CHANGELOG.md for changes in this release." \
+            --generate-notes

@@ -6,6 +6,27 @@ response. Built to give an agent (Claude Code) reproducible, scriptable access t
 state — e.g. triggering `vv_*` diagnostic commands and reading what they print, without
 typing into the in-game console or round-tripping through dump files.
 
+## ⚠️ Security
+
+This mod opens an **unauthenticated** HTTP endpoint that runs **arbitrary Valheim
+console commands** (including anything `devcommands` unlocks). There is no token, no
+password, no per-request check beyond the optional allow/deny list below.
+
+- It binds **IPv4 loopback (`127.0.0.1`) only** by default, so it is not reachable
+  from other machines. Treat any change to `server.host` as exposing full console
+  control to whoever can reach that address — don't bind it to `0.0.0.0` or a LAN IP.
+- Any process on your own machine can still drive the game while the listener is up.
+  If that matters to you, lock it down with the `commands.allow` / `commands.deny`
+  list (see [Config](#config)) so only the commands you intend can run.
+- This is a development/automation tool. Don't run it on a shared or public host.
+
+## Compatibility
+
+Built and tested against **Valheim** (BepInEx pack
+`denikson-BepInExPack_Valheim-5.4.2333`, BepInEx 5.4.x). It only depends on
+Valheim's own `Console`/`Terminal`, so it should be resilient across game patches,
+but it is not tied to any specific game build.
+
 ## Design
 
 - Ships into `BepInEx/plugins/ValheimMCP/` (loaded once, **not** hot-reloaded), so the
@@ -88,13 +109,42 @@ commands:
   deny: []
 ```
 
+## Install
+
+**From Thunderstore (recommended):** install with [r2modman](https://thunderstore.io/c/valheim/p/ebkr/r2modman/)
+or the Thunderstore Mod Manager. It pulls in the BepInEx pack automatically.
+
+**Manual:** install [BepInExPack_Valheim](https://thunderstore.io/c/valheim/p/denikson/BepInExPack_Valheim/),
+then drop `ValheimMCP.dll` into `BepInEx/plugins/ValheimMCP/`. Launch the game once
+to generate `BepInEx/config/valheimmcp.yml`, then edit it if needed.
+
 ## Build
 
 ```sh
 dotnet build src/ValheimMCP/ValheimMCP.csproj -c Release
 ```
 
-Output lands directly in `BepInEx/plugins/ValheimMCP/`.
+Output lands directly in `BepInEx/plugins/ValheimMCP/`. The build paths in the
+`.csproj` assume a local Steam install and an r2modman profile named
+`valheim-modding`; override `ValheimDir` / `R2ModmanProfile` if yours differ.
+
+## Releasing
+
+CI can't compile this — it needs Valheim's (non-redistributable) managed
+assemblies — so releases are built locally. The version lives in **one place**,
+`<Version>` in `ValheimMCP.csproj`: it flows into the assembly version, the
+generated `PluginInfo` constants (used by `Plugin.cs` / `McpServer.cs`), and the
+packaged `manifest.json` (synced by `scripts/package.sh`). Bump it there, add a
+`CHANGELOG.md` entry, then:
+
+```sh
+./scripts/package.sh                       # -> dist/ValheimMCP-<version>.zip
+gh release create v<version> dist/ValheimMCP-<version>.zip --generate-notes
+```
+
+Upload the same zip to [Thunderstore](https://thunderstore.io/c/valheim/). The
+GitHub Actions workflow (`.github/workflows/release.yml`) can publish the release
+for you on a `v*` tag if you `git add -f` the built zip onto the tagged commit.
 
 ## Status / roadmap
 
@@ -105,3 +155,7 @@ Output lands directly in `BepInEx/plugins/ValheimMCP/`.
 - **Possible next:** a `GET /file` route (and/or inlining `written: <path>` contents) so
   commands that dump to `vv_dumps/` return their payload too; typed introspection tools
   for live state (villagers, region graph) as the navigation refactor needs them.
+
+## License
+
+[MIT](LICENSE) © 2026 myrcutio

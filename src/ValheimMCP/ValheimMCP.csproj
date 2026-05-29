@@ -4,7 +4,14 @@
         <LangVersion>9.0</LangVersion>
         <AssemblyName>ValheimMCP</AssemblyName>
         <RootNamespace>ValheimMCP</RootNamespace>
+
+        <!-- SINGLE SOURCE OF TRUTH for the mod's identity/version. These flow into
+             the assembly version, the generated PluginInfo class (consumed by
+             Plugin.cs / McpServer.cs), and Thunderstore/manifest.json (synced by
+             scripts/package.sh). To cut a release, bump <Version> here only. -->
         <Version>0.1.0</Version>
+        <BepInExPluginGuid>com.valheimmcp.server</BepInExPluginGuid>
+        <BepInExPluginName>Valheim MCP Server</BepInExPluginName>
         <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
         <!-- Suppress modding-common warnings (unassigned fields set by Unity/reflection) -->
         <NoWarn>$(NoWarn);CS0649;CS0169</NoWarn>
@@ -54,4 +61,32 @@
             <Private>false</Private>
         </Reference>
     </ItemGroup>
+
+    <!-- Generate PluginInfo.cs from the MSBuild properties above so the GUID/name/
+         version exist in exactly one place. Hand-rolled (no BepInEx.PluginInfoProps
+         dependency) to match this project's dependency-free convention. Semicolons
+         are escaped as %3B so MSBuild doesn't treat them as item separators. -->
+    <Target Name="GeneratePluginInfo" BeforeTargets="CoreCompile"
+            Inputs="$(MSBuildProjectFullPath)"
+            Outputs="$(IntermediateOutputPath)PluginInfo.g.cs">
+        <PropertyGroup>
+            <PluginInfoContent>// &lt;auto-generated/&gt; Generated from ValheimMCP.csproj — do not edit.
+namespace ValheimMCP
+{
+    internal static class PluginInfo
+    {
+        public const string Guid = "$(BepInExPluginGuid)"%3B
+        public const string Name = "$(BepInExPluginName)"%3B
+        public const string Version = "$(Version)"%3B
+    }
+}
+</PluginInfoContent>
+        </PropertyGroup>
+        <WriteLinesToFile File="$(IntermediateOutputPath)PluginInfo.g.cs"
+                          Lines="$(PluginInfoContent)"
+                          Overwrite="true" WriteOnlyWhenDifferent="true" />
+        <ItemGroup>
+            <Compile Include="$(IntermediateOutputPath)PluginInfo.g.cs" />
+        </ItemGroup>
+    </Target>
 </Project>

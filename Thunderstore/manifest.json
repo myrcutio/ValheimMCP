@@ -1,0 +1,9 @@
+{
+  "name": "ValheimMCP",
+  "version_number": "0.1.0",
+  "website_url": "https://github.com/myrcutio/ValheimMCP",
+  "description": "Localhost HTTP/MCP endpoint for driving Valheim's console remotely and reading the output. Built for agent-driven (Claude Code) access to game state.",
+  "dependencies": [
+    "denikson-BepInExPack_Valheim-5.4.2333"
+  ]
+}
