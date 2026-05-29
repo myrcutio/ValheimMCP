@@ -100,7 +100,8 @@ namespace ValheimMCP
             var sb = new StringBuilder();
             sb.Append("{\"tools\":[");
             AppendTool(sb, "run_command",
-                "Run a Valheim console command (e.g. 'vv_probe 100 -50', or any registered vv_* dev command) " +
+                "Run a Valheim console command (e.g. 'pos' to print the player's position, or any " +
+                "registered command — call list_commands to discover them) " +
                 "and return the lines it printed to the in-game console.",
                 "{\"type\":\"object\",\"properties\":{\"text\":{\"type\":\"string\"," +
                 "\"description\":\"The full console command line to execute.\"}},\"required\":[\"text\"]}");

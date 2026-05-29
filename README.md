@@ -3,7 +3,7 @@
 A standalone BepInEx plugin that exposes a **localhost HTTP endpoint** for driving
 Valheim's in-game console remotely and returning the console output directly in the
 response. Built to give an agent (Claude Code) reproducible, scriptable access to game
-state — e.g. triggering `vv_*` diagnostic commands and reading what they print, without
+state — e.g. running console commands like `pos` and reading what they print, without
 typing into the in-game console or round-tripping through dump files.
 
 ## ⚠️ Security
@@ -63,9 +63,9 @@ with no external dependencies — a hand-rolled JSON parser/writer and stateless
 - `health()` — is a world loaded.
 - `render_view(x, z, [y, yaw, pitch, dist, size])` — render the location with an
   **independent off-screen camera** (never touches the player's view) and return
-  the PNG inline. Pair with `vv_path_debug cam=vvmcp_render_cam` (or `vv_tri_debug
-  cam=vvmcp_render_cam`) on the ValheimVillages side to draw path/triangulation
-  overlays into *only* this camera.
+  the PNG inline. The off-screen camera is named `valheimmcp_render_cam`, so a mod
+  that can draw debug overlays into a named camera can target it to render those
+  overlays into *only* this view, leaving the player's screen untouched.
 
 Register it with Claude Code (game can be launched after; the connector reconnects):
 
@@ -82,7 +82,7 @@ bind is intentional: it keeps the endpoint strictly local.
 ```sh
 curl -s 127.0.0.1:8731/health
 curl -s 127.0.0.1:8731/commands
-curl -s -X POST 127.0.0.1:8731/command --data 'vv_probe 100 -50'
+curl -s -X POST 127.0.0.1:8731/command --data 'pos'
 ```
 
 ## Config
@@ -103,7 +103,7 @@ render:
 
 # Access control for run_command (and POST /command). 'deny' always wins; if
 # 'allow' is non-empty, ONLY matching commands run. Match by command name;
-# trailing '*' is a prefix wildcard (e.g. "vv_*").
+# trailing '*' is a prefix wildcard (e.g. "spawn*").
 commands:
   allow: []
   deny: []
@@ -153,8 +153,8 @@ for you on a `v*` tag if you `git add -f` the built zip onto the tagged commit.
 - **Known limitation:** output from commands that print asynchronously (coroutines, e.g.
   screenshot capture) is not captured — only what's printed synchronously during the call.
 - **Possible next:** a `GET /file` route (and/or inlining `written: <path>` contents) so
-  commands that dump to `vv_dumps/` return their payload too; typed introspection tools
-  for live state (villagers, region graph) as the navigation refactor needs them.
+  commands that dump to disk return their payload too; typed introspection tools for
+  live game state.
 
 ## License
 

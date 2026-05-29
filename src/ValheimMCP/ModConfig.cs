@@ -126,7 +126,7 @@ render:
 
 # Access control for run_command (and POST /command). 'deny' always wins. If
 # 'allow' is non-empty, ONLY matching commands may run. Match is by command name;
-# a trailing '*' is a prefix wildcard, e.g. ""vv_*"" allows all mod commands.
+# a trailing '*' is a prefix wildcard, e.g. ""spawn*"" matches every spawn command.
 commands:
   allow: []
   deny: []

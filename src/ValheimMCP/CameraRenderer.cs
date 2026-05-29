@@ -21,7 +21,7 @@ namespace ValheimMCP
     /// </summary>
     internal static class CameraRenderer
     {
-        private const string CamName = "vvmcp_render_cam";
+        private const string CamName = "valheimmcp_render_cam";
         private static Camera _sCam;
 
         /// <summary>

@@ -16,9 +16,9 @@ namespace ValheimMCP
 
     /// <summary>
     ///     Thin wrapper over Valheim's <c>Terminal</c>/<c>Console</c>. Drives the
-    ///     in-game console so any registered console command (including other mods'
-    ///     <c>vv_*</c> commands) can be triggered remotely, capturing whatever the
-    ///     command prints. No dependency on those mods.
+    ///     in-game console so any registered console command (vanilla or added by
+    ///     another mod) can be triggered remotely, capturing whatever the command
+    ///     prints. No dependency on any other mod.
     ///
     ///     Every method here MUST be called on the main thread.
     /// </summary>
@@ -49,7 +49,7 @@ namespace ValheimMCP
         }
 
         /// <summary>
-        ///     Run a console command line (e.g. <c>vv_probe 100 -50</c>) and return
+        ///     Run a console command line (e.g. <c>pos</c>) and return
         ///     the lines it printed to the console. Captures synchronous output only;
         ///     commands that print from a coroutine will emit later lines we don't see.
         /// </summary>
