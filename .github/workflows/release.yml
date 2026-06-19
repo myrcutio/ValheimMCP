@@ -44,9 +44,9 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          zip="$(ls dist/ValheimMCP-*.zip 2>/dev/null | head -1 || true)"
+          zip="$(ls dist/ValheimMCP-${GITHUB_REF_NAME}.zip 2>/dev/null | head -1 || true)"
           if [ -z "$zip" ]; then
-            echo "No dist/ValheimMCP-*.zip found on the tagged commit." >&2
+            echo "No dist/ValheimMCP-${GITHUB_REF_NAME}.zip found on the tagged commit." >&2
             echo "Build it locally with scripts/package.sh and commit it under dist/." >&2
             exit 1
           fi

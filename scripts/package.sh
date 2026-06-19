@@ -43,7 +43,7 @@ cp "${DLL}" "${STAGE}/plugins/ValheimMCP/"
 
 # 3. Zip it.
 mkdir -p dist
-OUT="${ROOT}/dist/ValheimMCP-${VERSION}.zip"
+OUT="${ROOT}/dist/ValheimMCP-v${VERSION}.zip"
 rm -f "${OUT}"
 ( cd "${STAGE}" && zip -r -q "${OUT}" . )
 echo "Wrote ${OUT}"
