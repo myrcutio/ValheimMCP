@@ -35,6 +35,10 @@ namespace ValheimMCP
             _harmony = new Harmony(PluginInfo.Guid);
             _harmony.PatchAll(typeof(ConsoleOutputCapture));
 
+            // Tap the BepInEx log stream so the wait_for_log MCP tool can block until a
+            // matching line appears (e.g. another mod's hot-reload finishing).
+            LogWatch.Install();
+
             var prefix = $"http://{ModConfig.Host}:{ModConfig.Port}/";
             try
             {
@@ -57,6 +61,7 @@ namespace ValheimMCP
         private void OnDestroy()
         {
             _server?.Stop();
+            LogWatch.Uninstall();
             _harmony?.UnpatchSelf();
             Log?.LogInfo($"{PluginInfo.Name} stopped.");
         }

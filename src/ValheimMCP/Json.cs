@@ -73,6 +73,14 @@ namespace ValheimMCP
             return sb.ToString();
         }
 
+        public static string LogResult(long cursor, int matching, int dropped, IEnumerable<string> lines)
+        {
+            return "{\"ok\":true,\"cursor\":" + cursor +
+                   ",\"matching\":" + matching +
+                   ",\"dropped\":" + dropped +
+                   ",\"lines\":" + Array(lines) + "}";
+        }
+
         public static string CommandResult(string ran, CommandResult result)
         {
             var sb = new StringBuilder();
