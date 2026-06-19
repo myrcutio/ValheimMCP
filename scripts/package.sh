@@ -12,7 +12,7 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 ROOT="$(pwd)"
 
-CSPROJ="src/ValheimMCP/ValheimMCP.csproj"
+CSPROJ="ValheimMCP.csproj"
 VERSION="$(grep -oP '<Version>\K[^<]+(?=</Version>)' "${CSPROJ}" | head -1)"
 if [[ -z "${VERSION}" ]]; then
   echo "error: could not read <Version> from ${CSPROJ}" >&2
@@ -22,7 +22,7 @@ echo "Packaging ValheimMCP v${VERSION}"
 
 # 1. Build Release and capture the DLL path MSBuild reports (the .csproj uses a
 #    custom OutputPath pointing into your BepInEx plugins dir, so we don't guess it).
-BUILD_LOG="$(dotnet build src/ValheimMCP/ValheimMCP.csproj -c Release)"
+BUILD_LOG="$(dotnet build ${CSPROJ} -c Release)"
 echo "${BUILD_LOG}"
 DLL="$(printf '%s\n' "${BUILD_LOG}" | grep -oP 'ValheimMCP -> \K.*ValheimMCP\.dll' | head -1)"
 if [[ -z "${DLL}" || ! -f "${DLL}" ]]; then
