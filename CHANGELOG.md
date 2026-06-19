@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- `get_log` MCP tool (and `GET /log` route): fetch recent lines from an in-memory
+  log ring buffer on demand — tail the log, including on a dedicated server whose
+  `LogOutput.log` isn't directly accessible. Supports incremental polling via a
+  `cursor`/`since` and filtering via `contains`/`regex`. Complements the blocking
+  `wait_for_log`.
+- `LogWatch` now retains a bounded ring buffer of recent formatted log lines
+  (configurable via `log.bufferCapacity` / `log.defaultLines` / `log.maxLines`).
+
 ## [0.1.0] - 2026-05-29
 
 ### Added

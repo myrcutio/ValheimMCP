@@ -47,6 +47,7 @@ but it is not tied to any specific game build.
 | GET    | `/health`   | —                         | `{ok, inGame}` |
 | GET    | `/commands` | —                         | `{ok, commands:[{name,description}]}` |
 | POST   | `/command`  | raw command line, or `?text=` | `{ok, ran, output:[...], error?}` |
+| GET    | `/log`      | `?since=` `?maxLines=` `?contains=` `?regex=` | `{ok, cursor, matching, dropped, lines:[...]}` |
 | GET    | `/sse`      | —                         | `501 Not Implemented` (no SSE transport) |
 
 The plain `/health`, `/commands`, `/command` routes are for `curl`/scripting.
@@ -66,6 +67,14 @@ with no external dependencies — a hand-rolled JSON parser/writer and stateless
   the PNG inline. The off-screen camera is named `valheimmcp_render_cam`, so a mod
   that can draw debug overlays into a named camera can target it to render those
   overlays into *only* this view, leaving the player's screen untouched.
+- `wait_for_log(pattern, [regex, timeoutMs])` — block until a log line matches,
+  then return it (streams observed lines as progress when the client sends a
+  progressToken). For waiting on an async event (e.g. a mod hot-reload finishing).
+- `get_log([since, maxLines, contains, regex])` — tail recent log lines from an
+  in-memory ring buffer (the MCP server, the game, and every other mod), returning
+  immediately. Omit `since` for the latest lines; pass back the `cursor` from the
+  result header to poll only what's new. Filter with `contains`/`regex`. Lets you
+  read logs even on a dedicated server whose `LogOutput.log` isn't reachable.
 
 Register it with Claude Code (game can be launched after; the connector reconnects):
 
@@ -100,6 +109,16 @@ render:
   defaultSize: 768         # render_view size when 'size' is omitted
   minSize: 256
   maxSize: 1280
+
+wait:
+  defaultTimeoutMs: 120000 # wait_for_log timeout when 'timeoutMs' is omitted
+  maxTimeoutMs: 600000
+  heartbeatMs: 5000        # SSE progress heartbeat while a wait is pending
+
+log:
+  bufferCapacity: 2000     # in-memory ring of recent log lines retained for get_log
+  defaultLines: 200        # get_log lines returned when 'maxLines' is omitted
+  maxLines: 1000
 
 # Access control for run_command (and POST /command). 'deny' always wins; if
 # 'allow' is non-empty, ONLY matching commands run. Match by command name;

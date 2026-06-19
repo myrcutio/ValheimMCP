@@ -9,7 +9,7 @@
              the assembly version, the generated PluginInfo class (consumed by
              Plugin.cs / McpServer.cs), and Thunderstore/manifest.json (synced by
              scripts/package.sh). To cut a release, bump <Version> here only. -->
-        <Version>0.1.0</Version>
+        <Version>0.2.0</Version>
         <BepInExPluginGuid>com.valheimmcp.server</BepInExPluginGuid>
         <BepInExPluginName>Valheim MCP Server</BepInExPluginName>
         <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
@@ -18,12 +18,12 @@
 
         <!-- Paths — mirror the ValheimVillages project conventions -->
         <ValheimDir>$(HOME)/.local/share/Steam/steamapps/common/Valheim</ValheimDir>
-        <R2ModmanProfile>valheim-modding</R2ModmanProfile>
+        <R2ModmanProfile>valheim-server</R2ModmanProfile>
         <BepInExDir>$(HOME)/.config/r2modmanPlus-local/Valheim/profiles/$(R2ModmanProfile)/BepInEx</BepInExDir>
 
         <!-- Ship into plugins/ (loaded once, NOT hot-reloaded) so the HTTP
              listener survives F6 reloads of other mods and never fights for its port. -->
-        <OutputPath>$(BepInExDir)/plugins/ValheimMCP/</OutputPath>
+        <OutputPath>$(BepInExDir)/plugins/idontunderstand-ValheimMCP/ValheimMCP/</OutputPath>
     </PropertyGroup>
 
     <!-- net472 reference assemblies so `dotnet build` works on Linux without a
