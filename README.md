@@ -23,7 +23,7 @@ password, no per-request check beyond the optional allow/deny list below.
 ## Compatibility
 
 Built and tested against **Valheim** (BepInEx pack
-`denikson-BepInExPack_Valheim-5.4.2333`, BepInEx 5.4.x). It only depends on
+`denikson-BepInExPack_Valheim-5.4.2350`, BepInEx 5.4.x). It only depends on
 Valheim's own `Console`/`Terminal`, so it should be resilient across game patches,
 but it is not tied to any specific game build.
 
