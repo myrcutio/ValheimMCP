@@ -9,7 +9,7 @@
              the assembly version, the generated PluginInfo class (consumed by
              Plugin.cs / McpServer.cs), and Thunderstore/manifest.json (synced by
              scripts/package.sh). To cut a release, bump <Version> here only. -->
-        <Version>0.2.1</Version>
+        <Version>0.2.2</Version>
         <BepInExPluginGuid>com.valheimmcp.server</BepInExPluginGuid>
         <BepInExPluginName>Valheim MCP Server</BepInExPluginName>
         <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
